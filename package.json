@@ -31,15 +31,18 @@
     ],
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "zip", "arch": ["x64"] }
       ],
-      "icon": "assets/logo.png"
+      "icon": "assets/logo.png",
+      "artifactName": "Spydomon-Portable.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "artifactName": "Spydomon-Setup.exe"
     }
   }
 }
