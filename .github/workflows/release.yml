@@ -27,7 +27,9 @@ jobs:
         run: npm ci
 
       - name: Build Windows Executable and Portable
-        run: npm run dist
+        run: npm run dist -- --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release and Upload Artifacts
         uses: softprops/action-gh-release@v2
@@ -42,4 +44,3 @@ jobs:
             dist/Spydomon-Portable.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
