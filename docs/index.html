@@ -1,0 +1,1763 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spydomon — Screen Overlay Reminders by TanishJain13</title>
+    <meta
+      name="description"
+      content="A lightweight, always-on-top desktop overlay reminder app for Windows 10 & 11. Built by TanishJain13."
+    />
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- FontAwesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <style>
+      :root {
+        --primary: #c62b29;
+        --primary-glow: rgba(198, 43, 41, 0.4);
+        --secondary: #00d2ff;
+        --secondary-glow: rgba(0, 210, 255, 0.3);
+        --bg-dark: #080b11;
+        --bg-card: rgba(15, 20, 32, 0.85);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --text-main: #f0f4f8;
+        --text-muted: #94a3b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Outfit", sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        overflow-x: hidden;
+        min-height: 100vh;
+        line-height: 1.6;
+        selection-background-color: var(--primary);
+      }
+
+      ::selection {
+        background-color: var(--primary);
+        color: #ffffff;
+      }
+
+      /* Ambient Spider-Web Canvas */
+      #webCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      /* Top Navigation Bar */
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 100;
+        padding: 16px 8%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        backdrop-filter: blur(16px);
+        background: rgba(8, 11, 17, 0.85);
+        border-bottom: 1px solid var(--card-border);
+      }
+
+      .logo-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--text-main);
+      }
+
+      .logo-box img {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        box-shadow: 0 0 15px var(--primary-glow);
+        transition: transform 0.3s ease;
+      }
+
+      .logo-box:hover img {
+        transform: scale(1.05);
+      }
+
+      .brand-meta {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .brand-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        font-size: 1.25rem;
+        letter-spacing: 0.5px;
+        color: #ffffff;
+        line-height: 1.1;
+      }
+
+      .brand-author {
+        font-family: monospace;
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+        color: var(--secondary);
+      }
+
+      nav ul {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        list-style: none;
+      }
+
+      nav a {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: color 0.2s ease;
+      }
+
+      nav a:hover {
+        color: #ffffff;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background 0.2s ease;
+      }
+
+      .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 20px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #ffffff;
+        background: var(--primary);
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        box-shadow: 0 4px 15px var(--primary-glow);
+        transition:
+          background 0.2s ease,
+          transform 0.2s ease;
+        cursor: pointer;
+      }
+
+      .btn-primary:hover {
+        background: #d93836;
+        transform: translateY(-1px);
+      }
+
+      /* Mobile Menu */
+      .mobile-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: #ffffff;
+        font-size: 1.25rem;
+        cursor: pointer;
+      }
+
+      /* Hero Section (Editorial Split) */
+      .hero {
+        position: relative;
+        padding: 160px 8% 80px;
+        max-width: 1280px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1.25fr 1fr;
+        align-items: center;
+        gap: 48px;
+      }
+
+      .hero-left {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 100px;
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--secondary);
+        margin-bottom: 24px;
+      }
+
+      .pill-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--secondary);
+        box-shadow: 0 0 8px var(--secondary);
+      }
+
+      /* 2-line iron rule for H1 */
+      .hero h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2.5rem, 4.5vw, 4rem);
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+        margin-bottom: 20px;
+        max-width: 680px;
+        text-wrap: balance;
+      }
+
+      .hero p {
+        font-size: 1.125rem;
+        color: var(--text-muted);
+        max-width: 540px;
+        line-height: 1.7;
+        margin-bottom: 36px;
+      }
+
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .stats-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        padding-top: 36px;
+        margin-top: 36px;
+        border-top: 1px solid var(--card-border);
+        width: 100%;
+        max-width: 540px;
+      }
+
+      .stat-val {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      .stat-lbl {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      /* Mascot Display */
+      .hero-right {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mascot-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transform-origin: top center;
+        animation: webSwing 4.5s ease-in-out infinite alternate;
+      }
+
+      .mascot-thread {
+        width: 2px;
+        height: 90px;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(255, 255, 255, 0.9)
+        );
+        box-shadow: 0 0 8px #ffffff;
+      }
+
+      .mascot-img {
+        width: 210px;
+        filter: drop-shadow(0 25px 40px rgba(0, 0, 0, 0.9));
+        user-select: none;
+        pointer-events: none;
+      }
+
+      .mascot-bubble {
+        margin-top: 8px;
+        width: 290px;
+        background: rgba(15, 20, 32, 0.96);
+        border: 1px solid rgba(198, 43, 41, 0.6);
+        border-radius: 12px;
+        padding: 14px 18px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      }
+
+      .bubble-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--card-border);
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+      }
+
+      .bubble-head span:first-child {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        color: var(--primary);
+      }
+
+      .bubble-head span:last-child {
+        font-family: monospace;
+        font-size: 0.6875rem;
+        color: var(--text-muted);
+      }
+
+      .bubble-msg {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #ffffff;
+        line-height: 1.4;
+      }
+
+      .bubble-tip {
+        display: block;
+        font-size: 0.6875rem;
+        color: var(--text-muted);
+        font-style: italic;
+        margin-top: 8px;
+      }
+
+      @keyframes webSwing {
+        0% {
+          transform: rotate(-8deg);
+        }
+        50% {
+          transform: rotate(8deg);
+        }
+        100% {
+          transform: rotate(-5deg);
+        }
+      }
+
+      /* Tech Marquee */
+      .marquee-container {
+        width: 100%;
+        overflow: hidden;
+        padding: 18px 0;
+        background: rgba(10, 14, 23, 0.6);
+        border-top: 1px solid var(--card-border);
+        border-bottom: 1px solid var(--card-border);
+        margin: 40px 0;
+      }
+
+      .marquee-track {
+        display: flex;
+        gap: 32px;
+        white-space: nowrap;
+        animation: marqueeScroll 28s linear infinite;
+      }
+
+      .marquee-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+      }
+
+      .marquee-badge i {
+        color: var(--secondary);
+      }
+
+      @keyframes marqueeScroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+
+      /* Section Layout Common */
+      .section-wrap {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 100px 8%;
+      }
+
+      .section-header {
+        max-width: 640px;
+        margin-bottom: 56px;
+        text-align: left;
+      }
+
+      .section-header h2 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2rem, 3.2vw, 2.75rem);
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      .section-header p {
+        color: var(--text-muted);
+        font-size: 1rem;
+        margin-top: 14px;
+        line-height: 1.7;
+      }
+
+      /* Gapless Bento Grid */
+      .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 24px;
+        grid-auto-flow: dense;
+      }
+
+      .bento-card {
+        background: var(--bg-card);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition:
+          border-color 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      .bento-card:hover {
+        border-color: rgba(198, 43, 41, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .col-8 {
+        grid-column: span 8;
+      }
+      .col-4 {
+        grid-column: span 4;
+      }
+
+      .card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(198, 43, 41, 0.15);
+        border: 1px solid rgba(198, 43, 41, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 1.25rem;
+        margin-bottom: 24px;
+      }
+
+      .card-icon.cyan {
+        background: rgba(0, 210, 255, 0.12);
+        border-color: rgba(0, 210, 255, 0.25);
+        color: var(--secondary);
+      }
+
+      .bento-card h3 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 12px;
+      }
+
+      .bento-card p {
+        color: var(--text-muted);
+        font-size: 0.9375rem;
+        line-height: 1.6;
+      }
+
+      .card-footer {
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      /* Interactive Simulator */
+      .simulator-box {
+        display: grid;
+        grid-template-columns: 1fr 1.6fr;
+        gap: 32px;
+        align-items: stretch;
+      }
+
+      .sim-controls {
+        background: var(--bg-card);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        text-align: left;
+      }
+
+      .control-group label {
+        display: block;
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .preset-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .preset-pill {
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .preset-pill:hover,
+      .preset-pill.active {
+        background: rgba(198, 43, 41, 0.15);
+        border-color: var(--primary);
+        color: #ffffff;
+      }
+
+      .sim-input {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--card-border);
+        color: #ffffff;
+        font-size: 0.8125rem;
+        outline: none;
+        transition: border-color 0.2s ease;
+      }
+
+      .sim-input:focus {
+        border-color: var(--primary);
+      }
+
+      .sound-toggle-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 12px;
+        border-top: 1px solid var(--card-border);
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+      }
+
+      .btn-toggle {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #34d399;
+        cursor: pointer;
+      }
+
+      .sim-stage {
+        background: #0b0f17;
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 24px;
+        position: relative;
+        min-height: 480px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      }
+
+      .stage-chrome {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 12px;
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .stage-dots {
+        display: flex;
+        gap: 6px;
+      }
+
+      .stage-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      .stage-watermark {
+        padding: 40px;
+        opacity: 0.25;
+        user-select: none;
+        pointer-events: none;
+        text-align: left;
+      }
+
+      /* Overlay Actor on Stage */
+      .stage-actor {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: -500px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        z-index: 40;
+        transition: top 0.55s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      }
+
+      .stage-actor.active {
+        top: 0px;
+      }
+
+      .actor-line {
+        width: 3px;
+        height: 100px;
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.3),
+          #ffffff
+        );
+        box-shadow: 0 0 10px #ffffff;
+      }
+
+      .actor-img {
+        width: 180px;
+        filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.95));
+      }
+
+      .actor-bubble {
+        margin-top: 10px;
+        width: 310px;
+        background: rgba(15, 20, 32, 0.96);
+        border: 2px solid var(--primary);
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(12px);
+      }
+
+      /* Showcase Section */
+      .showcase-frame {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--card-border);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+        background: #0b0f17;
+      }
+
+      .showcase-frame img {
+        width: 100%;
+        height: auto;
+        display: block;
+        transition: transform 0.6s ease;
+      }
+
+      .showcase-frame:hover img {
+        transform: scale(1.01);
+      }
+
+      .showcase-caption {
+        position: absolute;
+        bottom: 24px;
+        left: 24px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 24px;
+        border-radius: 12px;
+        background: rgba(8, 11, 17, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(16px);
+      }
+
+      /* Downloads Section */
+      .downloads-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 32px;
+        max-width: 960px;
+        margin: 0 auto;
+      }
+
+      .dl-box {
+        background: var(--bg-card);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 36px;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+      }
+
+      .dl-box.featured {
+        border-color: rgba(198, 43, 41, 0.6);
+        box-shadow: 0 10px 40px rgba(198, 43, 41, 0.15);
+      }
+
+      .dl-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        background: rgba(198, 43, 41, 0.2);
+        color: var(--primary);
+        border: 1px solid rgba(198, 43, 41, 0.4);
+        letter-spacing: 0.5px;
+      }
+
+      .dl-box h3 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.5rem;
+        color: #ffffff;
+        margin-bottom: 8px;
+      }
+
+      .dl-box p {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 24px;
+      }
+
+      .dl-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 32px;
+        font-size: 0.8125rem;
+        color: var(--text-main);
+      }
+
+      .dl-list li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .dl-list li i {
+        color: var(--secondary);
+        font-size: 0.875rem;
+      }
+
+      .cli-box {
+        max-width: 960px;
+        margin: 48px auto 0;
+        padding: 16px 24px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--card-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-family: monospace;
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+      }
+
+      .cli-box code {
+        color: var(--secondary);
+      }
+
+      /* Footer */
+      footer {
+        border-top: 1px solid var(--card-border);
+        padding: 48px 8%;
+        background: #080b11;
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+      }
+
+      .footer-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .footer-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .footer-brand img {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+      }
+
+      /* Responsive Breakpoints */
+      @media (max-width: 992px) {
+        .hero {
+          grid-template-columns: 1fr;
+          padding-top: 120px;
+        }
+        .hero-right {
+          order: -1;
+          margin-bottom: 20px;
+        }
+        .col-8,
+        .col-4 {
+          grid-column: span 12;
+        }
+        .simulator-box {
+          grid-template-columns: 1fr;
+        }
+        .downloads-grid {
+          grid-template-columns: 1fr;
+        }
+        nav {
+          display: none;
+        }
+        .mobile-toggle {
+          display: block;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Interactive Background Canvas -->
+    <canvas id="webCanvas"></canvas>
+
+    <!-- Top Navigation -->
+    <header>
+      <a href="#" class="logo-box">
+        <img src="assets/logo.png" alt="Spydomon" />
+        <div class="brand-meta">
+          <span class="brand-title">SPYDOMON</span>
+          <span class="brand-author">BY TanishJain13</span>
+        </div>
+      </a>
+
+      <nav>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#simulator">Live Simulator</a></li>
+          <li><a href="#showcase">Showcase</a></li>
+          <li><a href="#downloads">Downloads</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a
+          href="https://github.com/TanishJain13/Spydomon"
+          target="_blank"
+          class="btn-ghost"
+        >
+          <i class="fa-brands fa-github"></i> GitHub
+        </a>
+        <a href="#downloads" class="btn-primary">
+          <i class="fa-solid fa-download"></i> Download
+        </a>
+        <button
+          class="mobile-toggle"
+          id="mobileToggle"
+          aria-label="Toggle menu"
+        >
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="hero-left">
+          <div class="hero-pill">
+            <span class="pill-dot"></span>
+            Windows 10 & 11 Native Desktop Overlay System
+          </div>
+
+          <h1>Screen overlay reminders that drop from above.</h1>
+
+          <p>
+            Spydomon swings down over full-screen games, code editors, and video
+            calls the moment your timer expires. Click-through and invisible
+            when idle.
+          </p>
+
+          <div class="hero-actions">
+            <a
+              href="#downloads"
+              class="btn-primary"
+              style="padding: 12px 24px; font-size: 0.9375rem"
+            >
+              <i class="fa-brands fa-windows"></i> Download Windows Setup
+            </a>
+            <a
+              href="#simulator"
+              class="btn-ghost"
+              style="padding: 12px 24px; font-size: 0.9375rem"
+            >
+              <i class="fa-solid fa-play"></i> Experience Live Drop
+            </a>
+          </div>
+
+          <div class="stats-strip">
+            <div>
+              <div class="stat-val">0%</div>
+              <div class="stat-lbl">CPU overhead when idle</div>
+            </div>
+            <div>
+              <div class="stat-val">Always</div>
+              <div class="stat-lbl">On top of active windows</div>
+            </div>
+            <div>
+              <div class="stat-val">100%</div>
+              <div class="stat-lbl">Offline and private</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="mascot-container">
+            <div class="mascot-thread"></div>
+            <img
+              src="assets/Tobey-Maguire-Spider-Man-Classic-Pose-PNG.png"
+              alt="Spydomon Mascot"
+              class="mascot-img"
+            />
+            <div class="mascot-bubble">
+              <div class="bubble-head">
+                <span>SPYDOMON REMINDER</span>
+                <span>DUE NOW</span>
+              </div>
+              <div class="bubble-msg">
+                Time to drink water and check your posture.
+              </div>
+              <span class="bubble-tip"
+                >Click anywhere or press ESC to retract</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tech Architecture Marquee -->
+      <div class="marquee-container">
+        <div class="marquee-track">
+          <div class="marquee-badge">
+            <i class="fa-solid fa-desktop"></i> Always-On-Top Layering
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-bell"></i> System Tray Daemon
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-volume-high"></i> Web Audio Native Synthesis
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-layer-group"></i> Click-Through When Idle
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-hard-drive"></i> Offline Local Storage
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-microchip"></i> Electron 31 Architecture
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-shield-halved"></i> Permission-Isolated IPC
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-bolt"></i> Instant Retraction Physics
+          </div>
+
+          <!-- Duplicated for seamless infinite loop -->
+          <div class="marquee-badge">
+            <i class="fa-solid fa-desktop"></i> Always-On-Top Layering
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-bell"></i> System Tray Daemon
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-volume-high"></i> Web Audio Native Synthesis
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-layer-group"></i> Click-Through When Idle
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-hard-drive"></i> Offline Local Storage
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-microchip"></i> Electron 31 Architecture
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-shield-halved"></i> Permission-Isolated IPC
+          </div>
+          <div class="marquee-badge">
+            <i class="fa-solid fa-bolt"></i> Instant Retraction Physics
+          </div>
+        </div>
+      </div>
+
+      <!-- Gapless Bento Grid Section -->
+      <section id="features" class="section-wrap">
+        <div class="section-header">
+          <h2>
+            Engineered for zero distraction until the exact second you need it.
+          </h2>
+          <p>
+            Most desktop reminders hide behind active games or steal your typing
+            focus. Spydomon uses a dual-window transparent overlay architecture
+            that hovers without grabbing focus.
+          </p>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Card 1: Col 8 -->
+          <div class="bento-card col-8">
+            <div>
+              <div class="card-icon">
+                <i class="fa-solid fa-layer-group"></i>
+              </div>
+              <h3>Transparent Screen-Saver Priority Layer</h3>
+              <p>
+                The overlay window operates in an independent
+                hardware-accelerated viewport positioned on top of DirectX
+                games, virtual desktops, and multi-monitor displays. When not
+                firing, clicks pass straight through to your apps.
+              </p>
+            </div>
+            <div class="card-footer">
+              <span style="color: #34d399">Click-Through Enabled</span>
+              <span>Screen-Saver Level Z-Index</span>
+              <span>Multi-Workspace Visible</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Col 4 -->
+          <div class="bento-card col-4">
+            <div>
+              <div class="card-icon cyan">
+                <i class="fa-solid fa-volume-high"></i>
+              </div>
+              <h3>Web Audio Synthesis</h3>
+              <p>
+                Zero audio file dependencies. Web-slinging and dismissal sounds
+                are generated mathematically in real time via oscillator
+                frequencies.
+              </p>
+            </div>
+            <div class="card-footer">
+              <span>Square Wave 800Hz - 2600Hz</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Col 4 -->
+          <div class="bento-card col-4">
+            <div>
+              <div class="card-icon cyan">
+                <i class="fa-solid fa-clock"></i>
+              </div>
+              <h3>Quick Preset Engine</h3>
+              <p>
+                One-click presets for hydration, posture alignment, eye rest,
+                and task audits, plus decimal minute precision for custom
+                intervals.
+              </p>
+            </div>
+            <div class="card-footer">
+              <span>5s Test / 15m Break / 1h Water</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Col 8 -->
+          <div class="bento-card col-8">
+            <div>
+              <div class="card-icon"><i class="fa-solid fa-bell"></i></div>
+              <h3>System Tray Daemon & Persistence</h3>
+              <p>
+                Closing the control window docks Spydomon in your Windows
+                notification tray. Active timers persist across system restarts
+                using lightweight offline disk serialization.
+              </p>
+            </div>
+            <div class="card-footer">
+              <span>Automatic Background Ticking</span>
+              <span>Zero Telemetry Storage</span>
+              <span>No Account Required</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interactive Live Simulator Section -->
+      <section
+        id="simulator"
+        style="
+          background: #06080e;
+          border-top: 1px solid var(--card-border);
+          border-bottom: 1px solid var(--card-border);
+        "
+      >
+        <div class="section-wrap">
+          <div class="section-header">
+            <h2>Interactive Overlay Simulator</h2>
+            <p>
+              Test the drop physics and audio sequence right in your browser.
+              This demonstrates the exact animation that drops onto your Windows
+              desktop.
+            </p>
+          </div>
+
+          <div class="simulator-box">
+            <!-- Controls -->
+            <div class="sim-controls">
+              <div class="control-group">
+                <label>Select Reminder Preset</label>
+                <div class="preset-buttons">
+                  <button
+                    class="preset-pill active"
+                    data-msg="Time to drink water and hydrate."
+                  >
+                    Time to drink water and hydrate.
+                  </button>
+                  <button
+                    class="preset-pill"
+                    data-msg="Posture check! Sit straight and roll shoulders."
+                  >
+                    Posture check! Sit straight and roll shoulders.
+                  </button>
+                  <button
+                    class="preset-pill"
+                    data-msg="Take a 5-minute break and rest your eyes."
+                  >
+                    Take a 5-minute break and rest your eyes.
+                  </button>
+                  <button
+                    class="preset-pill"
+                    data-msg="Review active task list before switching context."
+                  >
+                    Review active task list before switching context.
+                  </button>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label>Custom Message Input</label>
+                <input
+                  type="text"
+                  id="simMsgInput"
+                  class="sim-input"
+                  value="Time to drink water and hydrate."
+                />
+              </div>
+
+              <div class="sound-toggle-bar">
+                <span
+                  ><i
+                    class="fa-solid fa-volume-high"
+                    style="color: var(--secondary); margin-right: 6px"
+                  ></i>
+                  Web Audio Effects</span
+                >
+                <button class="btn-toggle" id="soundToggleBtn">ENABLED</button>
+              </div>
+
+              <button
+                id="triggerDropBtn"
+                class="btn-primary"
+                style="
+                  width: 100%;
+                  padding: 14px;
+                  font-size: 0.9375rem;
+                  margin-top: 8px;
+                "
+              >
+                <i class="fa-solid fa-play"></i> Trigger Drop Animation
+              </button>
+            </div>
+
+            <!-- Virtual Screen -->
+            <div class="sim-stage" id="simStage">
+              <div class="stage-chrome">
+                <div class="stage-dots">
+                  <span class="stage-dot" style="background: #ef4444"></span>
+                  <span class="stage-dot" style="background: #f59e0b"></span>
+                  <span class="stage-dot" style="background: #10b981"></span>
+                  <span style="margin-left: 8px"
+                    >Active Workspace Simulation</span
+                  >
+                </div>
+                <span id="stageStatus">OVERLAY STANDBY</span>
+              </div>
+
+              <div class="stage-watermark">
+                <p
+                  style="
+                    font-family: monospace;
+                    font-size: 0.8125rem;
+                    color: var(--secondary);
+                  "
+                >
+                  $ spydomon --background-daemon active
+                </p>
+                <p
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    margin-top: 8px;
+                  "
+                >
+                  Your Regular Coding or Gaming Workspace
+                </p>
+                <p
+                  style="
+                    font-size: 0.8125rem;
+                    color: var(--text-muted);
+                    margin-top: 8px;
+                    max-width: 420px;
+                  "
+                >
+                  Spydomon rests transparently above all applications without
+                  interfering with keyboard input or game frames.
+                </p>
+              </div>
+
+              <!-- Dropping Actor -->
+              <div class="stage-actor" id="stageActor">
+                <div class="actor-line"></div>
+                <img
+                  src="assets/Tobey-Maguire-Spider-Man-Classic-Pose-PNG.png"
+                  alt="Dropping Spydomon"
+                  class="actor-img"
+                />
+                <div class="actor-bubble">
+                  <div class="bubble-head">
+                    <span>SPYDOMON REMINDER</span>
+                    <span id="actorTime">DUE NOW</span>
+                  </div>
+                  <div class="bubble-msg" id="actorMsg">
+                    Time to drink water and hydrate.
+                  </div>
+                  <span class="bubble-tip"
+                    >Click anywhere or press ESC to retract</span
+                  >
+                </div>
+              </div>
+
+              <div
+                class="stage-chrome"
+                style="
+                  border-top: 1px solid rgba(255, 255, 255, 0.05);
+                  border-bottom: none;
+                  padding-top: 12px;
+                "
+              >
+                <span>Anchor: Top Bezel Center</span>
+                <span
+                  id="dismissHint"
+                  style="color: var(--primary); cursor: pointer; display: none"
+                  >Click to Retract</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Showcase Section -->
+      <section id="showcase" class="section-wrap">
+        <div class="section-header">
+          <h2>Designed for Clean Battlestations and Dual Displays</h2>
+          <p>
+            Whether you use a curved ultrawide gaming display or a multi-monitor
+            developer setup, Spydomon integrates without cluttering your
+            desktop.
+          </p>
+        </div>
+
+        <div class="showcase-frame">
+          <img
+            src="assets/showcase.jpg"
+            alt="Spydomon Battlestation Showcase by TanishJain13"
+          />
+          <div class="showcase-caption">
+            <div style="display: flex; align-items: center; gap: 12px">
+              <img
+                src="assets/logo.png"
+                alt="Logo"
+                style="width: 36px; height: 36px; border-radius: 8px"
+              />
+              <div>
+                <div
+                  style="
+                    font-family: &quot;Space Grotesk&quot;, sans-serif;
+                    font-weight: 700;
+                    font-size: 0.9375rem;
+                    color: #ffffff;
+                  "
+                >
+                  Spydomon Production Setup
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted)">
+                  Created by TanishJain13 for Windows 10 & 11
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                font-family: monospace;
+                font-size: 0.75rem;
+                color: var(--text-muted);
+                display: flex;
+                gap: 16px;
+              "
+            >
+              <span style="color: var(--secondary)"
+                ><i class="fa-solid fa-check"></i> Ultrawide Ready</span
+              >
+              <span style="color: #34d399"
+                ><i class="fa-solid fa-check"></i> Tray Docking</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Downloads Hub -->
+      <section
+        id="downloads"
+        style="background: #06080e; border-top: 1px solid var(--card-border)"
+      >
+        <div class="section-wrap">
+          <div class="section-header">
+            <h2>Download Spydomon for Windows</h2>
+            <p>
+              Free, open-source, and completely offline. Built natively for
+              Windows 10 and Windows 11.
+            </p>
+          </div>
+
+          <div class="downloads-grid">
+            <!-- Windows Card -->
+            <div class="dl-box featured">
+              <div class="dl-badge">RECOMMENDED</div>
+              <div>
+                <div class="card-icon">
+                  <i class="fa-brands fa-windows"></i>
+                </div>
+                <h3>Windows Setup (.exe)</h3>
+                <p>
+                  Full NSIS Windows installer with Start Menu shortcuts, system
+                  tray autostart support, and background persistence.
+                </p>
+                <ul class="dl-list">
+                  <li>
+                    <i class="fa-solid fa-circle-check"></i> Supports Windows 10
+                    & 11 (x64)
+                  </li>
+                  <li>
+                    <i class="fa-solid fa-circle-check"></i>
+                    Hardware-accelerated transparent overlay
+                  </li>
+                  <li>
+                    <i class="fa-solid fa-circle-check"></i> System tray
+                    minimization and auto-launch
+                  </li>
+                </ul>
+              </div>
+              <a
+                href="https://github.com/TanishJain13/Spydomon/releases/download/v1.0.0/Spydomon-Setup.exe"
+                class="btn-primary"
+                style="width: 100%; justify-content: center; padding: 14px"
+                download
+              >
+                <i class="fa-solid fa-download"></i> Download Windows Installer
+                (79 MB)
+              </a>
+            </div>
+
+            <!-- Windows Portable Card -->
+            <div class="dl-box">
+              <div class="dl-badge" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--text-muted)">STANDALONE</div>
+              <div>
+                <div class="card-icon cyan">
+                  <i class="fa-solid fa-box-archive"></i>
+                </div>
+                <h3>Windows Portable (.zip)</h3>
+                <p>
+                  Zero-installation standalone package. Extract to any directory
+                  or run directly from a USB drive without admin privileges.
+                </p>
+                <ul class="dl-list">
+                  <li>
+                    <i class="fa-solid fa-circle-check"></i> No administrator
+                    privileges required
+                  </li>
+                  <li>
+                    <i class="fa-solid fa-circle-check"></i> Self-contained local
+                    JSON profile storage
+                  </li>
+                  <li>
+                    <i class="fa-solid fa-circle-check"></i> Clean removal —
+                    just delete the folder
+                  </li>
+                </ul>
+              </div>
+              <a
+                href="https://github.com/TanishJain13/Spydomon/releases/download/v1.0.0/Spydomon-Portable.zip"
+                class="btn-ghost"
+                style="width: 100%; justify-content: center; padding: 14px"
+                download
+              >
+                <i class="fa-solid fa-download"></i> Download Portable ZIP (81
+                MB)
+              </a>
+            </div>
+          </div>
+
+          <div class="cli-box">
+            <div>
+              <i class="fa-solid fa-terminal" style="margin-right: 8px"></i>
+              <span>Developer build from source:</span>
+              <code
+                >git clone https://github.com/TanishJain13/Spydomon.git && npm
+                install && npm start</code
+              >
+            </div>
+            <span>Node.js 18+ required</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <img src="assets/logo.png" alt="Spydomon" />
+          <span>SPYDOMON</span>
+          <span style="color: var(--text-muted); font-weight: normal"
+            >by TanishJain13</span
+          >
+        </div>
+
+        <div>Free and open source. Built for productivity and focus.</div>
+
+        <div>
+          <a
+            href="https://github.com/TanishJain13/Spydomon"
+            target="_blank"
+            style="
+              color: var(--text-muted);
+              text-decoration: none;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            "
+          >
+            <i class="fa-brands fa-github"></i> GitHub Repository
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Web Audio Synthesis & Particle Canvas Script -->
+    <script>
+      // Web Audio Synthesis for drop and dismiss sounds
+      let audioCtx = null;
+      let soundEnabled = true;
+
+      function getCtx() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      function playWebSound() {
+        if (!soundEnabled) return;
+        try {
+          const ctx = getCtx();
+          let t = ctx.currentTime;
+          for (let freq = 800; freq < 2400; freq += 200) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "square";
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.04, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.02);
+            t += 0.017;
+          }
+        } catch (e) {}
+      }
+
+      function playDismissSound() {
+        if (!soundEnabled) return;
+        try {
+          const ctx = getCtx();
+          let t = ctx.currentTime;
+          for (let freq = 2000; freq > 600; freq -= 250) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "square";
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.04, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.02);
+            t += 0.017;
+          }
+        } catch (e) {}
+      }
+
+      // Simulator Logic
+      const presetPills = document.querySelectorAll(".preset-pill");
+      const simMsgInput = document.getElementById("simMsgInput");
+      const triggerDropBtn = document.getElementById("triggerDropBtn");
+      const stageActor = document.getElementById("stageActor");
+      const stageStatus = document.getElementById("stageStatus");
+      const actorMsg = document.getElementById("actorMsg");
+      const dismissHint = document.getElementById("dismissHint");
+      const soundToggleBtn = document.getElementById("soundToggleBtn");
+
+      presetPills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+          presetPills.forEach((p) => p.classList.remove("active"));
+          pill.classList.add("active");
+          simMsgInput.value = pill.getAttribute("data-msg");
+        });
+      });
+
+      soundToggleBtn.addEventListener("click", () => {
+        soundEnabled = !soundEnabled;
+        soundToggleBtn.textContent = soundEnabled ? "ENABLED" : "MUTED";
+        soundToggleBtn.style.color = soundEnabled ? "#34D399" : "#94A3B8";
+      });
+
+      let isFiring = false;
+
+      function triggerOverlay() {
+        if (isFiring) return;
+        isFiring = true;
+        actorMsg.textContent = simMsgInput.value.trim() || "Spydomon Reminder!";
+        stageStatus.textContent = "OVERLAY FIRING";
+        stageStatus.style.color = "#C62B29";
+        dismissHint.style.display = "inline";
+        playWebSound();
+        stageActor.classList.add("active");
+      }
+
+      function dismissOverlay() {
+        if (!isFiring) return;
+        isFiring = false;
+        playDismissSound();
+        stageActor.classList.remove("active");
+        stageStatus.textContent = "OVERLAY STANDBY";
+        stageStatus.style.color = "var(--text-muted)";
+        dismissHint.style.display = "none";
+      }
+
+      triggerDropBtn.addEventListener("click", triggerOverlay);
+      stageActor.addEventListener("click", dismissOverlay);
+      dismissHint.addEventListener("click", dismissOverlay);
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isFiring) {
+          dismissOverlay();
+        }
+      });
+
+      // Interactive Canvas Network
+      const canvas = document.getElementById("webCanvas");
+      const ctx = canvas.getContext("2d");
+      let width = (canvas.width = window.innerWidth);
+      let height = (canvas.height = window.innerHeight);
+
+      const nodes = [];
+      const nodeCount = Math.floor((width * height) / 32000);
+      let mouse = { x: null, y: null, radius: 160 };
+
+      window.addEventListener("resize", () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        mouse.x = e.x;
+        mouse.y = e.y;
+      });
+
+      class WebNode {
+        constructor() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.radius = Math.random() * 1.5 + 1;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > width) this.vx *= -1;
+          if (this.y < 0 || this.y > height) this.vy *= -1;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = "#C62B29";
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < nodeCount; i++) {
+        nodes.push(new WebNode());
+      }
+
+      function animateCanvas() {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = 0; i < nodes.length; i++) {
+          nodes[i].update();
+          nodes[i].draw();
+
+          for (let j = i + 1; j < nodes.length; j++) {
+            const dx = nodes[i].x - nodes[j].x;
+            const dy = nodes[i].y - nodes[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 130) {
+              ctx.beginPath();
+              ctx.moveTo(nodes[i].x, nodes[i].y);
+              ctx.lineTo(nodes[j].x, nodes[j].y);
+              ctx.strokeStyle = `rgba(198, 43, 41, ${0.15 * (1 - dist / 130)})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+
+          if (mouse.x && mouse.y) {
+            const mdx = nodes[i].x - mouse.x;
+            const mdy = nodes[i].y - mouse.y;
+            const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+
+            if (mdist < mouse.radius) {
+              ctx.beginPath();
+              ctx.moveTo(nodes[i].x, nodes[i].y);
+              ctx.lineTo(mouse.x, mouse.y);
+              ctx.strokeStyle = `rgba(0, 210, 255, ${0.25 * (1 - mdist / mouse.radius)})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(animateCanvas);
+      }
+      animateCanvas();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+{
+  "name": "spydomon",
+  "version": "1.0.0",
+  "description": "Spydomon - Spider-Man style desktop overlay reminders for Windows by TanishJain13",
+  "main": "main.js",
+  "author": "TanishJain13",
+  "license": "ISC",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "pack": "electron-builder --dir",
+    "build": "npm run build --prefix \"spydomon website\""
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.TanishJain13.spydomon",
+    "productName": "Spydomon",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "assets/logo.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

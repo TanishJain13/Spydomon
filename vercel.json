@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cd \"spydomon website\" && npm install && npm run build",
+  "outputDirectory": "spydomon website/dist"
+}
