@@ -1,35 +1,40 @@
 import React, { useState } from 'react';
-import { Download, Github, Menu, X, ShieldAlert } from 'lucide-react';
+import { Download, Github, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 px-4 sm:px-8 py-4 backdrop-blur-md bg-[#080B11]/80 border-b border-white/5">
+    <header className="fixed top-0 left-0 w-full z-50 px-4 sm:px-8 py-3.5 backdrop-blur-md bg-[#05070B]/85 border-b border-white/[0.07]">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Brand */}
         <a href="#" className="flex items-center gap-3 group">
           <img
             src="/logo.png"
-            alt="Spydomon"
-            className="w-10 h-10 rounded-lg shadow-lg shadow-[#C62B29]/20 transition-transform duration-300 group-hover:scale-105"
+            alt="Spydomon Icon"
+            className="w-8 h-8 rounded-md border border-white/10 shadow-sm transition-transform duration-300 group-hover:scale-105"
           />
-          <div className="flex flex-col">
-            <span className="font-display font-bold text-lg tracking-wider text-white flex items-center gap-1.5">
+          <div className="flex flex-col text-left">
+            <span className="font-display font-bold text-sm tracking-widest text-white">
               SPYDOMON
             </span>
-            <span className="text-[10px] tracking-widest text-[#00D2FF] font-mono -mt-1">
-              BY TanishJain13
+            <span className="text-[9px] tracking-widest text-slate-400 font-mono -mt-0.5">
+              by tanishjain13
             </span>
           </div>
         </a>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-          <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="#simulator" className="hover:text-white transition-colors">Live Simulator</a>
-          <a href="#showcase" className="hover:text-white transition-colors">Showcase</a>
-          <a href="#downloads" className="hover:text-white transition-colors">Downloads</a>
+        <nav className="hidden md:flex items-center gap-7 text-xs font-mono text-slate-300">
+          <a href="#features" className="hover:text-white transition-colors">
+            Architecture
+          </a>
+          <a href="#simulator" className="hover:text-white transition-colors">
+            3D Simulator
+          </a>
+          <a href="#downloads" className="hover:text-white transition-colors">
+            Releases
+          </a>
         </nav>
 
         {/* Action Buttons */}
@@ -38,78 +43,69 @@ export default function Navbar() {
             href="https://github.com/TanishJain13/Spydomon"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/10 transition-colors"
           >
-            <Github className="w-4 h-4" />
+            <Github className="w-3.5 h-3.5" />
             GitHub
           </a>
           <a
             href="#downloads"
-            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-[#C62B29] hover:bg-[#D93836] text-white shadow-md shadow-[#C62B29]/30 transition-all duration-200"
+            className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-mono font-semibold rounded-md bg-[#E62429] hover:bg-[#C62B29] text-white shadow-sm transition-all"
           >
-            <Download className="w-4 h-4" />
-            Download
+            <Download className="w-3.5 h-3.5" />
+            Get Windows App
           </a>
         </div>
 
         {/* Mobile Toggle */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden text-slate-300 hover:text-white p-2"
+          className="md:hidden text-slate-300 hover:text-white p-1.5"
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="md:hidden mt-4 pb-4 border-t border-white/10 flex flex-col gap-3 px-2 pt-3">
+        <div className="md:hidden mt-3 pb-4 border-t border-white/10 flex flex-col gap-2 px-2 pt-3 text-left font-mono text-xs">
           <a
             href="#features"
             onClick={() => setMobileOpen(false)}
-            className="px-3 py-2 text-sm text-slate-200 hover:bg-white/5 rounded-md"
+            className="px-3 py-2 text-slate-200 hover:bg-white/5 rounded"
           >
-            Features
+            Architecture
           </a>
           <a
             href="#simulator"
             onClick={() => setMobileOpen(false)}
-            className="px-3 py-2 text-sm text-slate-200 hover:bg-white/5 rounded-md"
+            className="px-3 py-2 text-slate-200 hover:bg-white/5 rounded"
           >
-            Live Simulator
-          </a>
-          <a
-            href="#showcase"
-            onClick={() => setMobileOpen(false)}
-            className="px-3 py-2 text-sm text-slate-200 hover:bg-white/5 rounded-md"
-          >
-            Showcase
+            3D Simulator
           </a>
           <a
             href="#downloads"
             onClick={() => setMobileOpen(false)}
-            className="px-3 py-2 text-sm text-slate-200 hover:bg-white/5 rounded-md"
+            className="px-3 py-2 text-slate-200 hover:bg-white/5 rounded"
           >
-            Downloads
+            Releases
           </a>
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-2 border-t border-white/5 mt-1">
             <a
               href="https://github.com/TanishJain13/Spydomon"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg bg-white/5 text-white border border-white/10"
+              className="flex-1 py-2 text-center rounded bg-white/5 border border-white/10 text-slate-200"
             >
-              <Github className="w-4 h-4" />
-              Source
+              GitHub
             </a>
             <a
               href="#downloads"
               onClick={() => setMobileOpen(false)}
-              className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg bg-[#C62B29] text-white"
+              className="flex-1 py-2 text-center rounded bg-[#E62429] text-white font-semibold"
             >
-              <Download className="w-4 h-4" />
-              Install
+              Download
             </a>
           </div>
         </div>
@@ -117,4 +113,3 @@ export default function Navbar() {
     </header>
   );
 }
-
